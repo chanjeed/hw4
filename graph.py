@@ -37,22 +37,18 @@ def find_id(pages,page_name):
         return page_id
 
 def find_name(pages,page_id):
-    return pages[page_id]['name']
-
+    return str(pages[page_id]['name'])
 def read_link(file_name):
     graph={}
-    i=1
     file = open(file_name, 'r')
     for line in file:
         node1,node2=line.split()
         print node1,node2
         if node1 not in graph.keys():
             graph.update({node1:[]})
-        print i
-        i+=1
-        graph[node1].append(node2)
-       
+        graph[node1].append(node2) 
     file.close()
+  
     print graph
     return graph
          
@@ -94,11 +90,12 @@ def bfs(graph, start, end):
         if last_node == end:
             return temp_path
         # enumerate all adjacent nodes, construct a new path and push it into the queue
-        for next in graph[last_node]:
-            if next not in temp_path:
-                new_path = []
-                new_path = temp_path + [next]
-                q.enq(new_path)
+        if last_node  in graph.keys() and graph[last_node]!=[]:
+            for next in graph[last_node]:
+                if next not in temp_path:
+                    new_path = []
+                    new_path = temp_path + [next]
+                    q.enq(new_path)
     print "Not found path"
     return []
 
@@ -120,12 +117,15 @@ while(1):
         print "id is <=",PAGE_NUM_MAX
 exit(1)
 '''
-graph=read_link("links.txt")
+graph=read_link("links_mini.txt")
 print "FINISH READ LINKS"
-page_name=raw_input("Find page: ")
-id1=find_id(pages_sorted_name,page_name)
-page_name=raw_input("To page: ")
-id2=find_id(pages_sorted_name,page_name)
-path=bfs(graph,id1,id2)
-if path!=[]:
-    print "Found path: ",path
+while(1):
+    page_name=raw_input("Find page: ")
+    id1=find_id(pages_sorted_name,page_name)
+    page_name=raw_input("To page: ")
+    id2=find_id(pages_sorted_name,page_name)
+    path=bfs(graph,id1,id2)
+    if path!=[]:
+        print "Found path: "
+        for id in path:
+            print find_name(pages,int(id))+">>"
