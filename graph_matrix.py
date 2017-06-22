@@ -1,12 +1,18 @@
-PAGE_NUM_MAX=1483276
+import csv
+import time
+import math
+import numpy as np
+from scipy.sparse import lil_matrix, csr_matrix
 
+#PAGE_NUM_MAX=1483276
+PAGE_NUM_MAX=6
 
 def read_page(file_name):
     pages=[]
     file = open(file_name, 'r')
     for line in file:
         (name,num)=(line.split()[1],line.split()[0])
-        pages.append({"name":name,"id":num})
+        pages.append({"name":name,"id":int(num)})
     file.close()
     
     return pages
@@ -34,22 +40,30 @@ def find_id(pages,page_name):
         return page_id
     else:
         print "Not found %s"%(page_name)
-        return page_id
+        return -1
 
 def find_name(pages,page_id):
     return pages[page_id]['name']
 
 def read_link(file_name):
-    graph=[[0 for y in range(PAGE_NUM_MAX+1)]for x in range(PAGE_NUM_MAX+1)]
-    print "A"
+    origin=[]
+    destination=[]
+    link_num=np.zeros(PAGE_NUM_MAX+1,dtype=np.uint32)
     file = open(file_name, 'r')
     for line in file:
-        node1,node2=line.split()
+        node1,node2=line.split('\t')
         print node1,node2
-        graph[node1][node2]=1
+        origin.append(int(node1))
+        destination.append(int(node2))
+        link_num[int(node1)]+=1
     file.close()
-    return graph
-         
+    graph = lil_matrix((PAGE_NUM_MAX+1,PAGE_NUM_MAX+1), dtype = np.uint32)
+    for k in range(len(origin)):
+        if k % 5000000 == 0:
+            print('link', k)
+        graph[destination[k], origin[k]] = 1    
+    graph= graph.tocsr()
+    return graph         
 class Queue:
     def __init__(self):
         self.items = []
@@ -82,42 +96,42 @@ def bfs(graph, start, end):
     q.enq(temp_path)
     while (q.isEmpty()!=True):
         temp_path=q.deq()
-        last_node=temp_path[len(temp_path)-1]
+        last_node=temp_path[len(str(temp_path))-1]
 
         # path found
         if last_node == end:
             return temp_path
         # enumerate all adjacent nodes, construct a new path and push it into the queue
+    
         for i in range(PAGE_NUM_MAX+1):
-            if graph[last_node][i]==1:
+            if graph[i,last_node]==1:
                 q.enq(i)
+
     print "Not found path"
     return []
 
+start=time.clock()
 pages=read_page("pages.txt")
+end=time.clock()
+print "FINISH READ PAGES time= ",end-start," [s]"
 import operator
 pages_sorted_name=sorted(pages,key=operator.itemgetter('name'))#Sort pages by Alphabet order
-'''while(1):
-    page_name=raw_input("Find page: ")
-    id=find_id(pages_sorted_name,page_name)
-    if id!=-1:
-        print "id=",id
 
+start=time.clock()
+graph=read_link("links_mini.txt")
+end=time.clock()
+print "FINISH READ LINKS time= ",end-start," [s]"
 while(1):
-    page_id=int(raw_input("Find page from id: "))
-    if page_id<=PAGE_NUM_MAX:
-        name=find_name(pages,page_id)
-        print "name=",name
-    else:
-        print "id is <=",PAGE_NUM_MAX
-exit(1)
-'''
-graph=read_link("links.txt")
-print "FINISH READ LINKS"
-page_name=raw_input("Find page: ")
-id1=find_id(pages_sorted_name,page_name)
-page_name=raw_input("To page: ")
-id2=find_id(pages_sorted_name,page_name)
-path=bfs(graph,id1,id2)
-if path!=[]:
-    print "Found path: ",path
+    page_name=raw_input("Find page: ")
+    id1=find_id(pages_sorted_name,page_name)
+    if id1==-1:
+        continue
+    page_name=raw_input("To page: ")
+    id2=find_id(pages_sorted_name,page_name)
+    if id2==-1:
+        continue
+    print "FIND ",id1,id2
+    print graph
+    path=bfs(graph,id1,id2)
+    if path!=[]:
+        print "Found path: ",path

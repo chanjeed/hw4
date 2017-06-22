@@ -1,3 +1,6 @@
+import numpy as np
+import time
+
 PAGE_NUM_MAX=1483276
 
 
@@ -44,12 +47,10 @@ def read_link(file_name):
     for line in file:
         node1,node2=line.split()
         print node1,node2
-        if node1 not in graph.keys():
+        if node1 not in graph:
             graph.update({node1:[]})
         graph[node1].append(node2) 
     file.close()
-  
-    print graph
     return graph
          
 class Queue:
@@ -98,27 +99,16 @@ def bfs(graph, start, end):
                     q.enq(new_path)
     print "Not found path"
     return []
-
+start=time.clock()
 pages=read_page("pages.txt")
+end=time.clock()
+print "FINISH READ PAGES time= ",end-start," [s]"
 import operator
 pages_sorted_name=sorted(pages,key=operator.itemgetter('name'))#Sort pages by Alphabet order
-'''while(1):
-    page_name=raw_input("Find page: ")
-    id=find_id(pages_sorted_name,page_name)
-    if id!=-1:
-        print "id=",id
-
-while(1):
-    page_id=int(raw_input("Find page from id: "))
-    if page_id<=PAGE_NUM_MAX:
-        name=find_name(pages,page_id)
-        print "name=",name
-    else:
-        print "id is <=",PAGE_NUM_MAX
-exit(1)
-'''
-graph=read_link("links_mini.txt")
-print "FINISH READ LINKS"
+start=time.clock()
+graph=read_link("links.txt")
+end=time.clock()
+print "FINISH READ LINKS time= ",end-start," [s]"
 while(1):
     page_name=raw_input("Find page: ")
     id1=find_id(pages_sorted_name,page_name)
